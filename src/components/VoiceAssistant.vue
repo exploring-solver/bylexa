@@ -58,7 +58,7 @@ const toggleListening = () => {
     isListening.value = !isListening.value;
 };
 
-const processSpeed = async (transcript) => {  // Corrected function name
+const processSpeed = async (transcript) => { 
     isProcessing.value = true;
     try {
         const response = await sendSpeechToServer(transcript);
