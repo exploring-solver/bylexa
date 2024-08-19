@@ -5,13 +5,13 @@ import VoiceAssistant from './components/VoiceAssistant.vue'
 <template>
   <div class="app-container">
     <header>
-      <h1>Voice Assistant IoT Project</h1>
+      <h1>Bylexa the voice assistant</h1>
     </header>
     <main>
       <VoiceAssistant />
     </main>
     <footer>
-      <p>Powered by Vue.js and Web Speech API</p>
+      <p>Made by B.Y.T.E.,  MAIT Delhi</p>
     </footer>
   </div>
 </template>

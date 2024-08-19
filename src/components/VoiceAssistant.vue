@@ -1,6 +1,6 @@
 <template>
     <div class="voice-assistant">
-        <h1>Voice Assistant</h1>
+        <h1></h1>
         <div class="assistant-face" :class="{ speaking: isSpeaking }">
             <div class="eye left"></div>
             <div class="eye right"></div>
