@@ -1,12 +1,12 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ESP32Servo.h>  // Use ESP32Servo library instead of the standard Servo library
-
+#include <config.h>
 // Replace with your network credentials
-const char* ssid = "Airtel_sanj_8210";
-const char* password = "air43348";
+const char* ssid = SSID;
+const char* password = PASSWORD;
 
-const char* serverName = "http://192.168.1.4:3000/control";
+const char* serverName = SERVER_NAME;
 
 Servo myServo;  // create servo object to control a servo
 int ledPin = 2; // GPIO pin for LED
