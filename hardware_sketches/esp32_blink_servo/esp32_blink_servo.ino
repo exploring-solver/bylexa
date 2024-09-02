@@ -5,71 +5,66 @@
 // Replace with your network credentials
 const char* ssid = SSID;
 const char* password = PASSWORD;
-
 const char* serverName = SERVER_NAME;
 
-Servo myServo;  // create servo object to control a servo
-int ledPin = 2; // GPIO pin for LED
-int servoPin = 13; // GPIO pin for Servo (PWM-capable)
+Servo myServo;
+const int ledPin = 2;
+const int servoPin = 13;
 
 void setup() {
   Serial.begin(115200);
-
-  // Attach the servo to GPIO 13 (PWM pin)
+  
   myServo.attach(servoPin);
+  pinMode(ledPin, OUTPUT);
 
-  pinMode(ledPin, OUTPUT);  // set LED pin as output
-
-  // Connect to Wi-Fi
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
-
   Serial.println("Connected to WiFi");
 }
 
 void loop() {
-  if ((WiFi.status() == WL_CONNECTED)) { // Check Wi-Fi connection
+  if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(serverName);  // Connect to Node.js server to get command
-
-    // Send HTTP request to Node.js server to get command
+    http.begin(serverName);
+    
     int httpResponseCode = http.GET();
-
+    
     if (httpResponseCode > 0) {
       String response = http.getString();
-      Serial.println(httpResponseCode);
       Serial.println("Received command: " + response);
-
-      // Execute the command based on the response
+      
       if (response == "blink_led") {
-        Serial.println("Executing blink_led command...");
-        digitalWrite(ledPin, HIGH);
-        delay(1000);
-        digitalWrite(ledPin, LOW);
-        delay(1000);
+        blinkLED();
       } else if (response == "rotate_servo") {
-        Serial.println("Executing rotate_servo command...");
-        
-        // Sweep the servo motor from 0 to 180 degrees and back
-        for (int pos = 0; pos <= 180; pos++) {
-          myServo.write(pos);
-          delay(15);
-        }
-        for (int pos = 180; pos >= 0; pos--) {
-          myServo.write(pos);
-          delay(15);
-        }
+        rotateServo();
       }
     } else {
       Serial.println("Error on HTTP request");
     }
-
-    http.end();  // End the HTTP connection
+    
+    http.end();
   }
   
-  delay(5000);  // Interval between checks
+  delay(5000);
+}
+
+void blinkLED() {
+  digitalWrite(ledPin, HIGH);
+  delay(1000);
+  digitalWrite(ledPin, LOW);
+  delay(1000);
+}
+
+void rotateServo() {
+  for (int pos = 0; pos <= 180; pos += 1) {
+    myServo.write(pos);
+    delay(15);
+  }
+  for (int pos = 180; pos >= 0; pos -= 1) {
+    myServo.write(pos);
+    delay(15);
+  }
 }
