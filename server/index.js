@@ -2,41 +2,44 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
+require('./db');
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY_12607);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const projectRoutes = require('./routes/projectRoutes');
+const commandRoutes = require('./routes/commandRoutes');
 
-let commands = ["blink_led", "rotate_servo"];
+let currentCommand = ""; // This will store the latest command sent via /send-command
 
 app.get('/control', (req, res) => {
-  // Randomly select between blink_led and rotate_servo
-  let randomIndex = Math.floor(Math.random() * commands.length);
-  let currentCommand = commands[randomIndex];
-
-  res.send(currentCommand); // Send the selected command to ESP32
-
-  // Optionally, you can reset or keep the current command for the next request
+  // Send the current command to the ESP32
+  if (currentCommand) {
+    res.send(currentCommand); // Send the latest command to ESP32
+  } else {
+    res.status(400).send('No command available');
+  }
 });
-
 
 app.post('/send-command', async (req, res) => {
   const { command } = req.body;
   console.log(`Received command: ${command}`);
   
-  // Use Gemini to interpret and generate response from the command
+  // Use Gemini to interpret and generate a response from the command
   const prompt = command;
   try {
     const result = await model.generateContent(prompt);
     const interpretedCommand = result.response.text();
     
-    // Log the interpreted command and send back to ESP32
+    // Log the interpreted command and update the currentCommand
     console.log(`Interpreted command: ${interpretedCommand}`);
-    if (interpretedCommand.includes("blink")) {
+    if (prompt.includes("blink")) {
       currentCommand = "blink_led";
-    } else if (interpretedCommand.includes("rotate")) {
+    } else if (prompt.includes("rotate")) {
       currentCommand = "rotate_servo";
     } else {
       currentCommand = ""; // No valid command
@@ -48,6 +51,10 @@ app.post('/send-command', async (req, res) => {
     res.status(500).json({ error: 'Failed to process command' });
   }
 });
+
+// Routes
+app.use('/api/projects', projectRoutes);
+app.use('/api/commands', commandRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
