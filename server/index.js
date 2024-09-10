@@ -1,10 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(cors());
 app.use(bodyParser.json());
 require('./db');
@@ -41,14 +43,12 @@ app.post('/send-command', async (req, res) => {
       currentCommand = "blink_led";
     } else if (prompt.includes("rotate")) {
       currentCommand = "rotate_servo";
-    } else {
-      currentCommand = ""; // No valid command
     }
-    
-    res.json({ status: 'Command processed', interpretedCommand });
+    console.log(currentCommand);
+    res.json({ response });
   } catch (error) {
     console.error('Error generating content:', error);
-    res.status(500).json({ error: 'Failed to process command' });
+    res.status(500).json({ error: 'Failed to process speech' });
   }
 });
 
@@ -56,7 +56,10 @@ app.post('/send-command', async (req, res) => {
 app.use('/api/projects', projectRoutes);
 app.use('/api/commands', commandRoutes);
 
-// Start the server
+// Routes
+app.use('/api/projects', projectRoutes);
+app.use('/api/commands', commandRoutes);
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
