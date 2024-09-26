@@ -15,7 +15,9 @@ const projectRoutes = require('./routes/projectRoutes');
 const commandRoutes = require('./routes/commandRoutes');
 
 let currentCommand = ""; // This will store the latest command sent via /send-command
-
+app.get('/', (req, res) => {
+  res.json("Hello there!! This is Bylexa(G.O.A.T. Greatest Of Automated Tasks) The Large Multi-Action Model")
+})
 app.get('/control', (req, res) => {
   // Send the current command to the ESP32
   if (currentCommand) {
