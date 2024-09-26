@@ -3,10 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
-const cors = require('cors');
 
 const app = express();
-app.use(cors());
 app.use(cors());
 app.use(bodyParser.json());
 require('./db');
@@ -51,10 +49,6 @@ app.post('/send-command', async (req, res) => {
     res.status(500).json({ error: 'Failed to process speech' });
   }
 });
-
-// Routes
-app.use('/api/projects', projectRoutes);
-app.use('/api/commands', commandRoutes);
 
 // Routes
 app.use('/api/projects', projectRoutes);
