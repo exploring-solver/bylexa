@@ -17,18 +17,27 @@ exports.parseCode = async (req, res) => {
   const { code } = req.body;
 
   try {
-    // This is a simple parser. You may need to adjust it based on your specific code structure.
-    const commandRegex = /void\s+(\w+)\s*\(\s*\)\s*{/g;
+    // Updated regex to match functions with parameters
+    const functionRegex = /void\s+(\w+)\s*\(([^)]*)\)\s*{/g;
     let match;
     const commands = [];
 
-    while ((match = commandRegex.exec(code)) !== null) {
-      const commandName = match[1];
+    while ((match = functionRegex.exec(code)) !== null) {
+      const commandName = match[1]; // Function name
+      const paramsString = match[2]; // Parameters as a string
+
+      // Split parameters and trim whitespace
+      const paramsArray = paramsString
+        .split(',')
+        .map(param => param.trim())
+        .filter(param => param.length > 0); // Filter out empty strings
+
       commands.push({
         project: projectId,
         name: commandName,
         description: `Executes the ${commandName} function`,
-        action: commandName
+        action: commandName,
+        parameters: paramsArray
       });
     }
 
@@ -99,25 +108,39 @@ exports.deleteProject = async (req, res) => {
 exports.executeCommand = async (req, res) => {
   const { projectId } = req.params;
   const { command } = req.body;
+
   try {
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    
+
     const availableCommands = await Command.find({ project: projectId });
     const commandNames = availableCommands.map(cmd => cmd.name);
-    
+
     const interpretedCommand = await aiService.interpretCommand(command, commandNames);
-    
+
     if (interpretedCommand) {
-      const matchedCommand = availableCommands.find(cmd => cmd.name === interpretedCommand);
+      const { commandName, parameters } = interpretedCommand;
+
+      const matchedCommand = availableCommands.find(cmd => cmd.name === commandName);
       if (matchedCommand) {
-        // Update the current command for the project
+        // Update the current command for the project along with its parameters
         project.currentCommand = matchedCommand.action;
+        project.parameters = parameters; // Optionally store parameters in project if needed
         await project.save();
-        
-        res.json({ status: 'Command executed', action: matchedCommand.action });
+
+        // Here, you would send the command and parameters to your microcontroller
+        // This part depends on how you're interacting with your hardware (e.g., via a microcontroller API)
+        const executionPayload = {
+          command: matchedCommand.action,
+          parameters: parameters.join(', '), // Pass parameters as a comma-separated string
+        };
+
+        // Assuming you have a service or function to send to the microcontroller
+        // await sendToMicrocontroller(executionPayload);
+
+        res.json({ status: 'Command executed', action: matchedCommand.action, parameters: parameters });
       } else {
         res.status(400).json({ error: 'Interpreted command not found in available commands' });
       }
@@ -128,6 +151,7 @@ exports.executeCommand = async (req, res) => {
     res.status(500).json({ error: 'Failed to execute command' });
   }
 };
+
 
 exports.getCurrentCommand = async (req, res) => {
   const { projectId } = req.params;

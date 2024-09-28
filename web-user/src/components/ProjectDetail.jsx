@@ -90,9 +90,24 @@ const ProjectDetail = () => {
         {commands.map(command => (
           <li key={command._id} className="border border-gray-600 p-4 rounded-lg bg-gray-800">
             <strong className="text-blue-400">{command.name}</strong>: {command.description}
+
+            {/* Check if the command has parameters */}
+            {command.parameters && command.parameters.length > 0 ? (
+              <div className="mt-2">
+                <p className="text-green-400">Parameters:</p>
+                <ul className="list-disc list-inside">
+                  {command.parameters.map((param, index) => (
+                    <li key={index} className="text-gray-300">{param}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="mt-2 text-red-400">No parameters</p>
+            )}
           </li>
         ))}
       </ul>
+
 
       {/* Voice Assistant Toggle */}
       <div className="mb-6">

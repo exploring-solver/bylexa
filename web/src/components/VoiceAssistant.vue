@@ -31,7 +31,7 @@
             <p>{{ currentCommand }}</p>
         </div>
         <!-- Display Current Command and Command List -->
-        <div v-if="selectedProject">
+        <div style="text-align: left;" v-if="selectedProject">
             <h2>Project: {{ selectedProject.name }}</h2>
             <p>{{ selectedProject.description }}</p>
 
@@ -39,11 +39,21 @@
             <ul>
                 <li v-for="command in commands" :key="command._id">
                     <strong>{{ command.name }}</strong>: {{ command.description }}
+
+                    <!-- Check if the command has parameters -->
+                    <div v-if="command.parameters && command.parameters.length">
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li v-for="(param, index) in command.parameters" :key="index">{{ param }}</li>
+                        </ul>
+                    </div>
+                    <div v-else>
+                        <p><strong>No parameters</strong></p>
+                    </div>
                 </li>
             </ul>
-
-
         </div>
+
     </div>
 </template>
 

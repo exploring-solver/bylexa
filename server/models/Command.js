@@ -1,3 +1,5 @@
+// models/Command.js
+
 const mongoose = require('mongoose');
 
 const commandSchema = new mongoose.Schema({
@@ -17,6 +19,10 @@ const commandSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true
+  },
+  parameters: {
+    type: [String], // Array of parameter names
+    default: []
   }
 }, { timestamps: true });
 
