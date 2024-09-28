@@ -108,39 +108,50 @@ exports.deleteProject = async (req, res) => {
 exports.executeCommand = async (req, res) => {
   const { projectId } = req.params;
   const { command } = req.body;
-
   try {
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-
+    
     const availableCommands = await Command.find({ project: projectId });
     const commandNames = availableCommands.map(cmd => cmd.name);
-
-    const interpretedCommand = await aiService.interpretCommand(command, commandNames);
-
-    if (interpretedCommand) {
-      const { commandName, parameters } = interpretedCommand;
-
+    
+    // Step 1: Interpret the command name
+    const interpretedCommandResult = await aiService.interpretCommand(command, commandNames);
+    
+    if (interpretedCommandResult) {
+      const { commandName } = interpretedCommandResult;
+      
+      // Step 2: Check if the command exists and has parameters
       const matchedCommand = availableCommands.find(cmd => cmd.name === commandName);
       if (matchedCommand) {
-        // Update the current command for the project along with its parameters
+        let parameters = [];
+        
+        if (matchedCommand.parameters && matchedCommand.parameters.length > 0) {
+          // Step 3: Get parameter values from AI service
+          parameters = await aiService.getParameterValues(command, matchedCommand.parameters);
+        }
+        
+        // Step 4: Update the current command and parameters
         project.currentCommand = matchedCommand.action;
-        project.parameters = parameters; // Optionally store parameters in project if needed
+        project.parameters = parameters; // Optionally store parameters in the project
         await project.save();
-
-        // Here, you would send the command and parameters to your microcontroller
-        // This part depends on how you're interacting with your hardware (e.g., via a microcontroller API)
+        
+        // Step 5: Prepare the execution payload
         const executionPayload = {
           command: matchedCommand.action,
-          parameters: parameters.join(', '), // Pass parameters as a comma-separated string
+          parameters: parameters.join(', '), // Adjust as needed
         };
-
-        // Assuming you have a service or function to send to the microcontroller
+        
+        // Step 6: Send the command to the microcontroller
         // await sendToMicrocontroller(executionPayload);
-
-        res.json({ status: 'Command executed', action: matchedCommand.action, parameters: parameters });
+        
+        res.json({
+          status: 'Command executed',
+          action: matchedCommand.action,
+          parameters: parameters,
+        });
       } else {
         res.status(400).json({ error: 'Interpreted command not found in available commands' });
       }
@@ -148,10 +159,10 @@ exports.executeCommand = async (req, res) => {
       res.status(400).json({ error: 'Unable to interpret command' });
     }
   } catch (error) {
+    console.error('Error executing command:', error);
     res.status(500).json({ error: 'Failed to execute command' });
   }
 };
-
 
 exports.getCurrentCommand = async (req, res) => {
   const { projectId } = req.params;
