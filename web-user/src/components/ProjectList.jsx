@@ -2,21 +2,44 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Config from '../config/Config';
+import { ClipLoader } from 'react-spinners';  // Importing react-spinners loader
 
 const ProjectList = () => {
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);  // State for loading
+  const [error, setError] = useState(null);  // State for error handling
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const response = await axios.get(`${Config.backendUrl}/api/projects`);
         setProjects(response.data);
+        setLoading(false);  // Stop loading once data is fetched
       } catch (error) {
         console.error('Error fetching projects:', error);
+        setError('Error fetching projects');  // Set error message
+        setLoading(false);
       }
     };
     fetchProjects();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-gray-900 text-white">
+        <ClipLoader color="#00BFFF" size={60} />  {/* Loading animation */}
+        <p className="text-xl mt-4">Please wait, fetching projects list...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-gray-900 text-white">
+        <p className="text-xl text-red-500">{error}</p>  {/* Error message */}
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-gray-900 text-white p-6'>
